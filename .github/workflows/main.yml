@@ -24,7 +24,7 @@ jobs:
       
       - name: Check if Swagger file exists
         run: |
-          if [ ! -f book-search/src/main/resources/openapi.yaml ] && [ ! -f book-search/src/main/resources/openapi.json ]; then
+          if [ ! -f src/main/resources/openapi.yaml ] && [ ! -f src/main/resources/openapi.json ]; then
             echo "Error: Swagger file not found in book-search/src/main/resources/"
             exit 1
           fi
