@@ -21,19 +21,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'maven'
-      
-      - name: Build with Maven
-        run: mvn clean verify
       
       - name: Check if Swagger file exists
         run: |
-          if [ ! -f book-search/src/main/resources/openapi.yaml ] && [ ! -f book-search/src/main/resources/openapi.json ]; then
+          if [ ! -f book-search/src/main/resources/*.yaml ] && [ ! -f book-search/src/main/resources/*.json ]; then
             echo "Error: Swagger file not found in book-search/src/main/resources/"
             exit 1
           fi

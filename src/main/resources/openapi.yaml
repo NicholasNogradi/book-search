@@ -1,0 +1,98 @@
+openapi: 3.0.1
+info:
+  title: Book Search API
+  description: API for importing and searching books
+  contact:
+    name: Nicholas Nogradi
+    email: nicholas@example.com
+  version: 1.0.1
+servers:
+- url: /
+  description: Default server
+tags:
+- name: Greeting
+  description: Endpoints that return simple greetings
+paths:
+  /hello:
+    get:
+      tags:
+      - Greeting
+      summary: Say hello
+      description: Returns a simple greeting message
+      operationId: sayHello
+      responses:
+        "200":
+          description: Successful greeting
+          content:
+            '*/*':
+              schema:
+                type: string
+  /api/books/search:
+    get:
+      tags:
+      - book-controller
+      operationId: searchBooks
+      parameters:
+      - name: searchTerm
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: offset
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        bookId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        rating:
+          type: number
+        description:
+          type: string
+        language:
+          type: string
+        isbn:
+          type: string
+        bookFormat:
+          type: string
+        edition:
+          type: string
+        pages:
+          type: integer
+          format: int32
+        publisher:
+          type: string
+        publishDate:
+          type: string
+          format: date-time
+        firstPublishDate:
+          type: string
+          format: date-time
+        likedPercent:
+          type: number
+        price:
+          type: number
