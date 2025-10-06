@@ -35,11 +35,11 @@ jobs:
           SWAGGERHUB_OWNER: ${{ vars.SWAGGERHUB_OWNER }}
         run: |
           # Determine which file exists (YAML or JSON)
-          if [ -f book-search/src/main/resources/openapi.yaml ]; then
-            SWAGGER_FILE="book-search/src/main/resources/openapi.yaml"
+          if [ -f src/main/resources/openapi.yaml ]; then
+            SWAGGER_FILE="src/main/resources/openapi.yaml"
             CONTENT_TYPE="application/yaml"
-          elif [ -f book-search/src/main/resources/openapi.json ]; then
-            SWAGGER_FILE="book-search/src/main/resources/openapi.json"
+          elif [ -f src/main/resources/openapi.json ]; then
+            SWAGGER_FILE="src/main/resources/openapi.json"
             CONTENT_TYPE="application/json"
           else
             echo "No swagger file found"
