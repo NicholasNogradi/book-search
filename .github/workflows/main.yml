@@ -79,7 +79,7 @@ jobs:
             "https://api.swaggerhub.com/apis/${SWAGGERHUB_OWNER}/${SWAGGERHUB_API_NAME}" \
             -H "Authorization: ${SWAGGERHUB_API_KEY}" \
             -H "Content-Type: ${CONTENT_TYPE}" \
-            -data-binary @"${SWAGGER_FILE}" \
+            --data-binary @"${SWAGGER_FILE}" \
             --fail-with-body
           
           echo "Successfully published to SwaggerHub!"
