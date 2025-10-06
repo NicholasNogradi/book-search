@@ -76,7 +76,7 @@ jobs:
           
           # Publish to SwaggerHub Registry API
           curl -X POST \
-            "https://api.swaggerhub.com/apis/${SWAGGERHUB_OWNER}/${SWAGGERHUB_API_NAME}" \
+            "https://api.swaggerhub.com/apis/${SWAGGERHUB_OWNER}/${SWAGGERHUB_API_NAME}/${SWAGGERHUB_VERSION}" \
             -H "Authorization: ${SWAGGERHUB_API_KEY}" \
             -H "Content-Type: ${CONTENT_TYPE}" \
             -d @"${SWAGGER_FILE}" \
