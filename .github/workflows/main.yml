@@ -1,0 +1,107 @@
+name: Build and Publish Swagger to SwaggerHub
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Build with Maven
+        run: mvn clean verify
+      
+      - name: Check if Swagger file exists
+        run: |
+          if [ ! -f book-search/src/main/resources/openapi.yaml ] && [ ! -f book-search/src/main/resources/openapi.json ]; then
+            echo "Error: Swagger file not found in book-search/src/main/resources/"
+            exit 1
+          fi
+      
+      - name: Parse API details and Publish to SwaggerHub
+        env:
+          SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+          SWAGGERHUB_OWNER: ${{ vars.SWAGGERHUB_OWNER }}
+        run: |
+          # Determine which file exists (YAML or JSON)
+          if [ -f book-search/src/main/resources/openapi.yaml ]; then
+            SWAGGER_FILE="book-search/src/main/resources/openapi.yaml"
+            CONTENT_TYPE="application/yaml"
+          elif [ -f book-search/src/main/resources/openapi.json ]; then
+            SWAGGER_FILE="book-search/src/main/resources/openapi.json"
+            CONTENT_TYPE="application/json"
+          else
+            echo "No swagger file found"
+            exit 1
+          fi
+          
+          echo "Found Swagger file: $SWAGGER_FILE"
+          
+          # Install yq for parsing YAML/JSON
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          
+          # Parse API name and version from the Swagger file
+          if [ "$CONTENT_TYPE" = "application/yaml" ]; then
+            API_TITLE=$(yq e '.info.title' "$SWAGGER_FILE")
+            API_VERSION=$(yq e '.info.version' "$SWAGGER_FILE")
+          else
+            API_TITLE=$(yq e '.info.title' "$SWAGGER_FILE" -p json)
+            API_VERSION=$(yq e '.info.version' "$SWAGGER_FILE" -p json)
+          fi
+          
+          # Convert title to API name (lowercase, replace spaces with hyphens)
+          SWAGGERHUB_API_NAME=$(echo "$API_TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | sed 's/[^a-z0-9-]//g')
+          SWAGGERHUB_VERSION="$API_VERSION"
+          
+          echo "API Name: $SWAGGERHUB_API_NAME"
+          echo "API Version: $SWAGGERHUB_VERSION"
+          
+          # Export for next step
+          echo "SWAGGERHUB_API_NAME=$SWAGGERHUB_API_NAME" >> $GITHUB_ENV
+          echo "SWAGGERHUB_VERSION=$SWAGGERHUB_VERSION" >> $GITHUB_ENV
+          
+          echo "Publishing $SWAGGER_FILE to SwaggerHub..."
+          
+          # Publish to SwaggerHub Registry API
+          curl -X POST \
+            "https://api.swaggerhub.com/apis/${SWAGGERHUB_OWNER}/${SWAGGERHUB_API_NAME}" \
+            -H "Authorization: ${SWAGGERHUB_API_KEY}" \
+            -H "Content-Type: ${CONTENT_TYPE}" \
+            -d @"${SWAGGER_FILE}" \
+            --fail-with-body
+          
+          echo "Successfully published to SwaggerHub!"
+      
+      - name: Set API as default version (optional)
+        if: github.ref == 'refs/heads/main'
+        env:
+          SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+          SWAGGERHUB_OWNER: ${{ vars.SWAGGERHUB_OWNER }}
+        run: |
+          curl -X PUT \
+            "https://api.swaggerhub.com/apis/${SWAGGERHUB_OWNER}/${SWAGGERHUB_API_NAME}/settings/default" \
+            -H "Authorization: ${SWAGGERHUB_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{\"version\":\"${SWAGGERHUB_VERSION}\"}" \
+            --fail-with-body
